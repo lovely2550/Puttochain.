@@ -1,63 +1,65 @@
-# main.py (เพิ่ม Pydantic Schema)
-# ... (Pydantic Schemas เดิม) ...
+# main.py (ส่วนที่เปลี่ยนแปลง)
+from fastapi import FastAPI, HTTPException, Depends
+# ...
+from puttochain.database import engine, Base, get_db
+from puttochain.models import User, JournalEntry # Import JournalEntry (updated)
+from puttochain.ipfs_service import IPFSService # <--- NEW IMPORT
 
-class ProposalCreate(BaseModel):
-    title: str
-    description: str
+# ... (other imports) ...
 
-class ProposalVote(BaseModel):
-    proposal_id: int
-    vote: bool # True = Yes, False = No
+# --- 1. การกำหนดค่าเริ่มต้นและ Instance ---
+app = FastAPI(title="Putthochain API (IPFS Integration)")
 
-# --- API Endpoints สำหรับ DAO ---
+ai_coach = AISomdejOngPathom()
+notifier = FCMNotifier()
+blockchain_integrator = BlockchainIntegrator()
+ipfs_service = IPFSService() # <--- NEW INSTANCE
 
-@app.post("/dao/proposals/", tags=["DAO Governance"], status_code=201)
-async def create_dao_proposal(
-    proposal_in: ProposalCreate,
-    admin_user: User = Depends(get_admin_user), # <--- ต้องเป็น Admin เท่านั้นที่สร้างได้
+# Initialize Database - (ต้องรัน Base.metadata.create_all(bind=engine) อีกครั้ง)
+
+# ... (Pydantic Schemas - JournalEntryCreate เหมือนเดิม) ...
+
+@app.post("/journals/", response_model=KarmaScore, tags=["Journals & Karma"])
+def create_journal_entry(
+    entry_in: JournalEntryCreate, 
     db: Session = Depends(get_db)
 ):
-    """สร้างข้อเสนอ DAO ใหม่ (Admin Only)"""
-    db_proposal = DaoProposal(
-        title=proposal_in.title,
-        description=proposal_in.description
+    
+    # 1. ค้นหาผู้ใช้ (Logic เดิม)
+    user = db.query(User).filter(User.wallet_address == entry_in.user_wallet_address).first()
+    # ... (logic for creating user if not exists) ...
+    
+    # 2. **IPFS:** อัปโหลด Journal Content และรับ Hash
+    if not entry_in.content:
+        raise HTTPException(status_code=400, detail="Journal content cannot be empty.")
+        
+    ipfs_hash = ipfs_service.upload_content(entry_in.content)
+    
+    # 3. คำนวณ Karma และอัปเดต User (Logic เดิม)
+    karma_change = calculate_karma(entry_in) 
+    user.karma_score += karma_change
+    user.total_meditation_minutes += entry_in.meditation_minutes
+
+    # 4. AI Guidance (ใช้ content เดิมก่อนจะทิ้งไป)
+    advice = ai_coach.analyze_journal_and_advise(entry_in.content, entry_in.meditation_minutes)
+    
+    # 5. สร้าง Journal Entry ใหม่ (เก็บ Hash แทน Content)
+    db_journal = JournalEntry(
+        owner_id=user.id,
+        ipfs_hash=ipfs_hash, # <--- STORE IPFS HASH
+        is_good_deed=entry_in.is_good_deed,
+        meditation_minutes=entry_in.meditation_minutes,
+        karma_change=karma_change,
+        ai_advice=advice
     )
-    db.add(db_proposal)
-    db.commit()
-    db.refresh(db_proposal)
-    return {"message": "Proposal created successfully", "proposal_id": db_proposal.id}
+    db.add(db_journal)
+    db.commit() 
+    db.refresh(user)
 
-@app.get("/dao/proposals/", tags=["DAO Governance"])
-def get_active_proposals(db: Session = Depends(get_db)):
-    """ดึงข้อเสนอที่กำลัง Active ทั้งหมด"""
-    proposals = db.query(DaoProposal).filter(DaoProposal.is_active == True).all()
-    return proposals
-
-@app.post("/dao/vote/", tags=["DAO Governance"])
-async def vote_on_proposal(
-    vote_in: ProposalVote,
-    current_user: User = Depends(get_current_user_wallet), # <--- ต้อง Login ด้วย Token
-    db: Session = Depends(get_db)
-):
-    """
-    ลงคะแนนโหวตในข้อเสนอ (Mockup: ไม่ได้ตรวจสอบ KMT Token Balance)
-    """
-    proposal = db.query(DaoProposal).filter(DaoProposal.id == vote_in.proposal_id).first()
+    # 6. Notification & Blockchain (Logic เดิม)
+    # ...
     
-    if not proposal or not proposal.is_active:
-        raise HTTPException(status_code=404, detail="Proposal not found or not active")
-        
-    # **Logic ที่สำคัญ:** ตรวจสอบว่าผู้ใช้เคยโหวตข้อเสนอนี้แล้วหรือไม่
-    # ในระบบจริงต้องมีตาราง 'Vote' แยกเพื่อตรวจสอบ
+    # 7. Return Status (Logic เดิม)
+    # ...
     
-    if vote_in.vote:
-        proposal.votes_yes += 1
-    else:
-        proposal.votes_no += 1
-        
-    db.commit()
-    
-    # 📌 ส่วนนี้คือจุดที่ Backend ควรจะเรียก Smart Contract `vote(proposalId, choice)`
-    print(f"[Blockchain MOCK] User {current_user.id} voted on Proposal {vote_in.proposal_id}")
-    
-    return {"message": "Vote recorded successfully"}
+    return KarmaScore(score=user.karma_score, level=level, ai_advice=advice)
