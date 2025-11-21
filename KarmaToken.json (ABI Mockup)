@@ -1,0 +1,25 @@
+{
+  "contractName": "KarmaToken",
+  "abi": [
+    // ฟังก์ชันสำหรับตรวจสอบ KMT Balance
+    {
+      "constant": true,
+      "inputs": [{ "name": "account", "type": "address" }],
+      "name": "balanceOf",
+      "outputs": [{ "name": "", "type": "uint256" }],
+      "type": "function"
+    },
+    // ฟังก์ชันสำหรับอนุมัติการใช้โทเค็น (ถ้ามี)
+    {
+      "constant": false,
+      "inputs": [
+        {"name": "spender", "type": "address"},
+        {"name": "amount", "type": "uint256"}
+      ],
+      "name": "approve",
+      "outputs": [{ "name": "", "type": "bool" }],
+      "type": "function"
+    },
+    // ... (ส่วนอื่นๆ) ...
+  ]
+}
