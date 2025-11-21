@@ -1,0 +1,60 @@
+# main.py (ส่วนที่เปลี่ยนแปลง)
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Dict
+# Import โมดูลที่สร้างขึ้นใหม่
+from puttochain.ai_coach import AISomdejOngPathom
+from puttochain.notification import FCMNotifier
+from puttochain.blockchain import BlockchainIntegrator # <--- ตัวนี้
+
+# --- 1. การกำหนดค่าเริ่มต้นและ Instance ---
+app = FastAPI(title="Putthochain API (Final Integration)")
+
+ai_coach = AISomdejOngPathom()
+notifier = FCMNotifier()
+# Initialise Blockchain
+try:
+    blockchain_integrator = BlockchainIntegrator()
+    print("Blockchain Integrator initialized successfully.")
+except Exception as e:
+    print(f"WARNING: Blockchain Integrator failed to initialize: {e}")
+    # สามารถจัดการให้ API ทำงานโดยไม่มี Blockchain ได้ในช่วง Dev
+
+# --- Pydantic Schemas (เพิ่ม Wallet Address) ---
+class JournalEntry(BaseModel):
+    user_id: int
+    user_fcm_token: str
+    user_wallet_address: str # <--- เพิ่มข้อมูลนี้
+    content: str
+    is_good_deed: bool 
+    meditation_minutes: int = 0
+
+# (ส่วน KarmaScore และ Karma Engine เหมือนเดิม)
+
+# --- API Endpoints ---
+@app.post("/journals/", response_model=KarmaScore, tags=["Journals & Karma"])
+def create_journal_entry(entry: JournalEntry):
+    user_id = entry.user_id
+    
+    # 1. คำนวณ Karma
+    karma_change = calculate_karma(entry)
+    new_karma_score = karma_db.get(user_id, 0) + karma_change
+    karma_db[user_id] = new_karma_score
+    
+    # 2. AI Guidance
+    advice = ai_coach.analyze_journal_and_advise(entry.content, entry.meditation_minutes)
+    
+    # 3. Notification
+    notifier.send_karma_update(entry.user_fcm_token, new_karma_score, karma_change)
+    notifier.send_ai_guidance(entry.user_fcm_token, advice)
+    
+    # 4. Blockchain Integration (Mint Token)
+    if karma_change > 0:
+        # Mint เฉพาะเมื่อมี Karma เพิ่มขึ้น
+        blockchain_integrator.mint_karma_token(entry.user_wallet_address, karma_change)
+    
+    level = "Bodhisattva" if new_karma_score > 500 else "Practitioner" if new_karma_score > 100 else "Beginner"
+    
+    return KarmaScore(score=new_karma_score, level=level, ai_advice=advice)
+
+# (Endpoint อื่นๆ เหมือนเดิม)
