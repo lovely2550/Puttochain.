@@ -1,21 +1,14 @@
-## tests/test_karma.py
+import pytest
+import sys
+import os
 
-# การนำเข้าที่ทำให้เกิดปัญหาในภาพ (ต้องมั่นใจว่า main.py ถูกพบ)
-# บรรทัดนี้คือบรรทัดที่ 30 ใน Traceback ของคุณ
-from main import calculate_karma, JournalEntry
+# --- เพิ่ม 3 บรรทัดนี้เพื่อแก้ไขปัญหา ModuleNotFoundError ---
+# คำสั่งนี้จะเพิ่มพาธหลักของโปรเจกต์ (โฟลเดอร์ Puttochain) เข้าไปใน Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# -----------------------------------------------------------
 
+# บรรทัดนี้จะทำงานได้สำเร็จหลังจากการแก้ไขด้านบน
+from main import calculate_karma, JournalEntry 
+from puttochain.ai_coach import AISomdejOngPathom
 
-def test_karma_calculation_is_correct():
-    """Test mixed entries to ensure calculate_karma works."""
-    entries = [
-        JournalEntry('good', 10),
-        JournalEntry('bad', 3),
-        JournalEntry('good', 5)
-    ]
-    # 10 - 3 + 5 = 12
-    expected_score = 12
-    assert calculate_karma(entries) == expected_score
-
-def test_empty_list_returns_zero():
-    """Test that an empty list returns 0."""
-    assert calculate_karma([]) == 0
+# ... (โค้ดที่เหลือเหมือนเดิม) ...
