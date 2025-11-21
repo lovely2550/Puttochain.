@@ -1,0 +1,18 @@
+// Function to cast a YES vote using Ethers.js
+const voteForProposal = async (proposalId) => {
+    // 1. Get signer (MetaMask)
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    
+    // 2. Create DAO Contract instance
+    const daoContract = new ethers.Contract(DAO_ADDRESS, DAO_ABI, signer);
+    
+    try {
+        // Vote: true = YES
+        const tx = await daoContract.vote(proposalId, true);
+        await tx.wait(); // Wait for transaction confirmation
+        console.log("Vote successful! Transaction hash:", tx.hash);
+    } catch (error) {
+        console.error("Voting failed:", error.message);
+    }
+};
