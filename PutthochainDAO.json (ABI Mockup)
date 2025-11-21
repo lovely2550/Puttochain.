@@ -1,0 +1,29 @@
+{
+  "contractName": "PutthochainDAO",
+  "abi": [
+    // ฟังก์ชันสำหรับการลงคะแนนโหวต
+    {
+      "inputs": [
+        {"internalType": "uint256", "name": "_proposalId", "type": "uint256"},
+        {"internalType": "bool", "name": "_support", "type": "bool"}
+      ],
+      "name": "vote",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    // ฟังก์ชันสำหรับการดึงข้อมูลข้อเสนอ
+    {
+      "constant": true,
+      "inputs": [{ "name": "", "type": "uint256" }],
+      "name": "proposals",
+      "outputs": [
+        {"name": "id", "type": "uint256"},
+        {"name": "title", "type": "string"},
+        {"name": "votesFor", "type": "uint256"}
+      ],
+      "type": "function"
+    }
+    // ... (ส่วนอื่นๆ) ...
+  ]
+}
