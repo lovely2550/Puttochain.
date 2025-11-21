@@ -1,21 +1,22 @@
-# ... (User และ JournalEntry Models เดิม) ...
+# puttochain/models.py (เฉพาะส่วนที่เปลี่ยนแปลง)
 
-class DaoProposal(Base):
+class JournalEntry(Base):
     """
-    ตารางสำหรับข้อเสนอการโหวตเชิงจริยธรรมของ DAO
+    ตาราง Journal Entries: บันทึกการกระทำดี/ชั่ว และผลการประเมิน
     """
-    __tablename__ = "dao_proposals"
+    __tablename__ = "journal_entries"
     
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    description = Column(Text, nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id"))
     
-    # Vote Counts
-    votes_yes = Column(Integer, default=0)
-    votes_no = Column(Integer, default=0)
+    # --- เปลี่ยนจาก Column(Text) เป็น Column(String) สำหรับเก็บ CID ---
+    ipfs_hash = Column(String, index=True, nullable=False) 
     
-    # Status
-    is_executed = Column(Boolean, default=False)
-    is_active = Column(Boolean, default=True)
+    is_good_deed = Column(Boolean, default=True)
+    meditation_minutes = Column(Integer, default=0)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    # ผลลัพธ์จากการประเมิน
+    karma_change = Column(Integer, default=0)
+    ai_advice = Column(Text, nullable=True)
+    
+    # ... (Metadata และ Relationship เหมือนเดิม) ...
