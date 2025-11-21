@@ -1,0 +1,21 @@
+# ... (โค้ดส่วนอื่น ๆ ของ main.yml) ...
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    # ... (Setup Python เหมือนเดิม) ...
+        
+    - name: Install dependencies (FIXED)
+      run: |
+        # ติดตั้ง dependencies ทั้งหมดที่จำเป็นสำหรับการรันและทดสอบ
+        pip install fastapi uvicorn[standard] pydantic web3 python-dotenv sqlalchemy psycopg2-binary
+        
+        # ติดตั้งโปรเจกต์ตัวเองในโหมดแก้ไข (-e .)
+        pip install -e .
+        
+        # ติดตั้งเครื่องมือทดสอบ/วิเคราะห์
+        pip install pytest pytest-cov flake8
+
+    - name: Lint with Flake8
+      # ... (โค้ดที่เหลือเหมือนเดิม) ...
