@@ -1,0 +1,3 @@
+cd frontend-directory
+npm install
+npm start
