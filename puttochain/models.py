@@ -1,47 +1,21 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
-from sqlalchemy.orm import relationship
-from .database import Base
-from datetime import datetime
+# ... (User และ JournalEntry Models เดิม) ...
 
-class User(Base):
+class DaoProposal(Base):
     """
-    ตาราง Users: เก็บข้อมูลผู้ใช้, Karma Score, และ Nibbana Progress
+    ตารางสำหรับข้อเสนอการโหวตเชิงจริยธรรมของ DAO
     """
-    __tablename__ = "users"
+    __tablename__ = "dao_proposals"
     
     id = Column(Integer, primary_key=True, index=True)
-    wallet_address = Column(String, unique=True, index=True, nullable=False) # ใช้เป็น ID หลักในการระบุตัวตน
-    fcm_token = Column(String, nullable=True) # สำหรับ Notification
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=False)
     
-    # Karma System
-    karma_score = Column(Integer, default=0)
+    # Vote Counts
+    votes_yes = Column(Integer, default=0)
+    votes_no = Column(Integer, default=0)
     
-    # Nibbana Tracker (Simplified)
-    total_meditation_minutes = Column(Integer, default=0)
+    # Status
+    is_executed = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
     
-    # Relationship
-    journals = relationship("JournalEntry", back_populates="owner")
-    
-    
-class JournalEntry(Base):
-    """
-    ตาราง Journal Entries: บันทึกการกระทำดี/ชั่ว และผลการประเมิน
-    """
-    __tablename__ = "journal_entries"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    owner_id = Column(Integer, ForeignKey("users.id")) # เชื่อมโยงกับผู้ใช้
-    
-    content = Column(Text, nullable=False)
-    is_good_deed = Column(Boolean, default=True)
-    meditation_minutes = Column(Integer, default=0)
-    
-    # ผลลัพธ์จากการประเมิน
-    karma_change = Column(Integer, default=0)
-    ai_advice = Column(Text, nullable=True)
-    
-    # Metadata
     created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relationship
-    owner = relationship("User", back_populates="journals")
