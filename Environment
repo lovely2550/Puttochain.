@@ -1,0 +1,3 @@
+pip install -e .
+# หรือ
+# pip install -r requirements.txt
