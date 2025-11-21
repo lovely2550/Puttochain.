@@ -1,8 +1,6 @@
-# ไลบรารีสำหรับ Puttochain (ถ้ามี)
-requests
-flask
-
-# ไลบรารีสำหรับการทดสอบและตรวจสอบโค้ด (ตามที่เห็นใน Workflow)
-pytest
-pytest-cov  # สำหรับ Code Coverage
-flake8     # สำหรับ Linting
+fastapi
+uvicorn[standard]
+pydantic
+# สำหรับ Blockchain Integration
+# web3
+# ethers
