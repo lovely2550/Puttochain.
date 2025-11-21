@@ -1,65 +1,78 @@
 # main.py (ส่วนที่เปลี่ยนแปลง)
 from fastapi import FastAPI, HTTPException, Depends
-# ...
+from sqlalchemy.orm import Session
+# ... (imports เดิม)
 from puttochain.database import engine, Base, get_db
-from puttochain.models import User, JournalEntry # Import JournalEntry (updated)
-from puttochain.ipfs_service import IPFSService # <--- NEW IMPORT
+from puttochain.models import User, JournalEntry
+# --- NEW IMPORT ---
+from puttochain.logging_config import setup_logging, logger 
 
-# ... (other imports) ...
+# --- Call Setup Logging ---
+setup_logging()
+logger.info("Starting Putthochain API application.")
 
-# --- 1. การกำหนดค่าเริ่มต้นและ Instance ---
-app = FastAPI(title="Putthochain API (IPFS Integration)")
-
-ai_coach = AISomdejOngPathom()
-notifier = FCMNotifier()
-blockchain_integrator = BlockchainIntegrator()
-ipfs_service = IPFSService() # <--- NEW INSTANCE
-
-# Initialize Database - (ต้องรัน Base.metadata.create_all(bind=engine) อีกครั้ง)
-
-# ... (Pydantic Schemas - JournalEntryCreate เหมือนเดิม) ...
+# ... (การกำหนดค่าและการสร้าง Instance ต่างๆ เหมือนเดิม) ...
 
 @app.post("/journals/", response_model=KarmaScore, tags=["Journals & Karma"])
 def create_journal_entry(
     entry_in: JournalEntryCreate, 
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db) 
 ):
     
-    # 1. ค้นหาผู้ใช้ (Logic เดิม)
+    # 1. ค้นหาผู้ใช้
     user = db.query(User).filter(User.wallet_address == entry_in.user_wallet_address).first()
-    # ... (logic for creating user if not exists) ...
     
-    # 2. **IPFS:** อัปโหลด Journal Content และรับ Hash
-    if not entry_in.content:
-        raise HTTPException(status_code=400, detail="Journal content cannot be empty.")
-        
-    ipfs_hash = ipfs_service.upload_content(entry_in.content)
+    if not user:
+        # บันทึกเมื่อมีการสร้าง User ใหม่
+        logger.info(
+            "New User created", 
+            extra={'extra_data': {'wallet_address': entry_in.user_wallet_address, 'event': 'USER_CREATED'}}
+        )
+        user = User(wallet_address=entry_in.user_wallet_address)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
     
-    # 3. คำนวณ Karma และอัปเดต User (Logic เดิม)
-    karma_change = calculate_karma(entry_in) 
-    user.karma_score += karma_change
-    user.total_meditation_minutes += entry_in.meditation_minutes
-
-    # 4. AI Guidance (ใช้ content เดิมก่อนจะทิ้งไป)
-    advice = ai_coach.analyze_journal_and_advise(entry_in.content, entry_in.meditation_minutes)
+    # ... (ส่วนการคำนวณ Karma, AI Guidance, IPFS Upload) ...
     
-    # 5. สร้าง Journal Entry ใหม่ (เก็บ Hash แทน Content)
+    # 5. สร้าง Journal Entry ใหม่
     db_journal = JournalEntry(
-        owner_id=user.id,
-        ipfs_hash=ipfs_hash, # <--- STORE IPFS HASH
-        is_good_deed=entry_in.is_good_deed,
-        meditation_minutes=entry_in.meditation_minutes,
-        karma_change=karma_change,
-        ai_advice=advice
+        # ... (รายละเอียดการบันทึก) ...
     )
     db.add(db_journal)
     db.commit() 
     db.refresh(user)
-
-    # 6. Notification & Blockchain (Logic เดิม)
-    # ...
     
-    # 7. Return Status (Logic เดิม)
-    # ...
+    # บันทึกเมื่อ Journal ถูกบันทึกสำเร็จ
+    logger.info(
+        "Journal entry processed successfully", 
+        extra={'extra_data': {
+            'user_id': user.id, 
+            'karma_change': karma_change,
+            'ipfs_hash': ipfs_hash,
+            'event': 'JOURNAL_PROCESSED'
+        }}
+    )
+
+    # 6. Notification & Blockchain
+    try:
+        if karma_change > 0:
+            blockchain_integrator.mint_karma_token(user.wallet_address, karma_change)
+            logger.info(
+                "KMT Mint initiated",
+                extra={'extra_data': {'user_id': user.id, 'amount': karma_change, 'event': 'MINT_INITIATED'}}
+            )
+    except Exception as e:
+        # บันทึก Critical Error หากการ Mint Token ล้มเหลว
+        logger.error(
+            "FATAL: KMT Mint failed", 
+            exc_info=True,
+            extra={'extra_data': {'user_id': user.id, 'error': str(e), 'event': 'MINT_FAILED'}}
+        )
+        # ควรมี logic การชดเชย (Compensation logic) ตรงนี้
+
+    # ... (ส่วนการ Return Status) ...
     
     return KarmaScore(score=user.karma_score, level=level, ai_advice=advice)
+
+# ... (Endpoint อื่นๆ เช่น get_user_karma_status ก็ควรเพิ่ม try/except และ logger.error เมื่อเกิดข้อผิดพลาด DB) ...
