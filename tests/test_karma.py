@@ -1,31 +1,44 @@
-import pytest
-import sys
-import os
+## tests/test_karma.py
 
-# แก้ไขปัญหา ModuleNotFoundError: เพิ่มพาธหลักเข้าไปในระบบ
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# การนำเข้า (import) ที่ถูกแก้ไขเพื่อให้ Pytest พบโมดูล 'main'
+from main import calculate_karma, JournalEntry
 
-# ตอนนี้นำเข้าไฟล์ main.py ได้
-from main import calculate_karma, JournalEntry 
-from puttochain.ai_coach import AISomdejOngPathom
 
-# --- ข้อมูล Mockup สำหรับการทดสอบ ---
-user_data_mock = {
-    "user_id": 99,
-    "user_fcm_token": "test-token",
-    "user_wallet_address": "0xTestWalletAddress"
-}
+def test_calculate_karma_positive():
+    """ทดสอบการคำนวณกรรมเมื่อมีแต่รายการดี"""
+    entries = [
+        JournalEntry('good', 5),
+        JournalEntry('good', 10)
+    ]
+    expected_score = 15
+    assert calculate_karma(entries) == expected_score
 
-# --- 1. ทดสอบ Karma Engine Logic ---
-def test_karma_good_deed_increase():
-    # ... (โค้ดทดสอบเหมือนเดิม) ...
-    entry_data = JournalEntry(
-        **user_data_mock, 
-        content="ช่วยเพื่อนร่วมงาน", 
-        is_good_deed=True, 
-        meditation_minutes=0
-    )
-    change = calculate_karma(entry_data)
-    assert change == 10
 
-# ... (โค้ดทดสอบอื่น ๆ ต่อไป) ...
+def test_calculate_karma_negative():
+    """ทดสอบการคำนวณกรรมเมื่อมีแต่รายการแย่"""
+    entries = [
+        JournalEntry('bad', 5),
+        JournalEntry('bad', 10)
+    ]
+    expected_score = -15
+    assert calculate_karma(entries) == expected_score
+
+
+def test_calculate_karma_mixed():
+    """ทดสอบการคำนวณกรรมเมื่อมีรายการดีและแย่ปนกัน"""
+    entries = [
+        JournalEntry('good', 20),
+        JournalEntry('bad', 5),
+        JournalEntry('good', 2),
+        JournalEntry('bad', 7)
+    ]
+    # ผลลัพธ์: 20 - 5 + 2 - 7 = 10
+    expected_score = 10
+    assert calculate_karma(entries) == expected_score
+
+
+def test_calculate_karma_empty():
+    """ทดสอบการคำนวณกรรมเมื่อไม่มีรายการ"""
+    entries = []
+    expected_score = 0
+    assert calculate_karma(entries) == expected_score
