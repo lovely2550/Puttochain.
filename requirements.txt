@@ -1,8 +1,8 @@
-fastapi==0.111.2
-uvicorn==0.23.2
-pydantic==1.10.12
-python-jose==3.3.0
-passlib[bcrypt]==1.7.4
-requests==2.31.0
-web3==6.1.1
-firebase-admin==6.0.1
+# ไลบรารีสำหรับ Puttochain (ถ้ามี)
+requests
+flask
+
+# ไลบรารีสำหรับการทดสอบและตรวจสอบโค้ด (ตามที่เห็นใน Workflow)
+pytest
+pytest-cov  # สำหรับ Code Coverage
+flake8     # สำหรับ Linting
