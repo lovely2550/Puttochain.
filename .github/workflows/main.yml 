@@ -1,35 +1,20 @@
-# ... (ส่วน name, on, env เหมือนเดิม) ...
+# ... (โค้ดส่วนอื่น ๆ ของ main.yml) ...
 
 jobs:
-  # 1. Build และ Test Logic (CI)
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+    # ... (Setup Python เหมือนเดิม) ...
         
-    - name: Install dependencies (Fixed)
+    - name: Install dependencies (FIXED)
       run: |
-        # ติดตั้งแพ็กเกจหลักทั้งหมด และ dependencies สำหรับการทดสอบ
+        # ติดตั้งแพ็กเกจหลักทั้งหมดที่จำเป็นสำหรับการรัน
         pip install fastapi uvicorn[standard] pydantic web3 python-dotenv sqlalchemy psycopg2-binary
+        
+        # ติดตั้งโปรเจกต์ตัวเองในโหมดแก้ไข (-e .)
         pip install -e .
+        
+        # ติดตั้งเครื่องมือทดสอบ/วิเคราะห์
         pip install pytest pytest-cov flake8
 
-    - name: Lint with Flake8
-      run: |
-        # ... (คำสั่ง Lint เหมือนเดิม) ...
-
-    - name: Run Pytest and calculate Coverage
-      run: |
-        # รันชุดทดสอบทั้งหมด
-        pytest --cov=puttochain --cov-report=xml
-
-    - name: Upload coverage report to Codecov
-      uses: codecov/codecov-action@v4 
-
-  # ... (ส่วน build-and-push-docker และ deploy เหมือนเดิม) ...
+    # ... (ขั้นตอน Lint และ Test ที่เหลือ) ...
