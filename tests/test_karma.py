@@ -2,10 +2,10 @@ import pytest
 import sys
 import os
 
-# --- เพิ่ม 3 บรรทัดนี้เพื่อแก้ไขปัญหา ModuleNotFoundError ---
-# คำสั่งนี้จะเพิ่มพาธหลักของโปรเจกต์ (โฟลเดอร์ Puttochain) เข้าไปใน Python path
+# --- เริ่มการแก้ไข: เพิ่มพาธหลักของโปรเจกต์เข้าไปในระบบ ---
+# บรรทัดนี้จะทำให้ Python สามารถค้นหาไฟล์ main.py ได้
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-# -----------------------------------------------------------
+# --------------------------------------------------------
 
 # บรรทัดนี้จะทำงานได้สำเร็จหลังจากการแก้ไขด้านบน
 from main import calculate_karma, JournalEntry 
