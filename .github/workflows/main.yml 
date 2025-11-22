@@ -1,20 +1,7 @@
-# ... (โค้ดส่วนอื่น ๆ ของ main.yml) ...
+import sys
+import os
+# แก้ไข ModuleNotFoundError และช่วยให้ Pytest ค้นพบ
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    steps:
-    # ... (Setup Python เหมือนเดิม) ...
-        
-    - name: Install dependencies (FIXED)
-      run: |
-        # ติดตั้งแพ็กเกจหลักทั้งหมดที่จำเป็นสำหรับการรัน
-        pip install fastapi uvicorn[standard] pydantic web3 python-dotenv sqlalchemy psycopg2-binary
-        
-        # ติดตั้งโปรเจกต์ตัวเองในโหมดแก้ไข (-e .)
-        pip install -e .
-        
-        # ติดตั้งเครื่องมือทดสอบ/วิเคราะห์
-        pip install pytest pytest-cov flake8
-
-    # ... (ขั้นตอน Lint และ Test ที่เหลือ) ...
+from main import calculate_karma, JournalEntry # ยืนยันว่าโค้ดนี้ทำงาน
+# ...
