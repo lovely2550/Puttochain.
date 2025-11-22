@@ -1,1 +1,3 @@
-  
+ # ในไฟล์ tests/test_karma.py
+# แทนที่จะใช้ from main import...
+# ให้ใช้ from puttochain.main import calculate_karma, JournalEntry
